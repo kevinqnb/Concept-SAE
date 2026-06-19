@@ -1,0 +1,20 @@
+[project]
+name = "concept-expert-sae"
+version = "0.1.0"
+description = "Concept Expert Sparse Autoencoders for mechanistic interpretability"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1.2",
+    "nnsight>=0.2.11",
+    "datasets>=2.18.0",
+    "transformers",
+    "einops>=0.7.0",
+    "numpy",
+    "matplotlib>=3.8.3",
+    "tqdm>=4.66.1",
+    "zstandard>=0.22.0",
+    "wandb",
+]
+
+[tool.uv]
+package = false
