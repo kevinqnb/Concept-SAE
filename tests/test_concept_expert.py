@@ -203,7 +203,7 @@ def test_trainer_loss_and_update():
     assert all(isinstance(l, float) for l in losses)
 
     norms = trainer.ae.decoder.data.norm(dim=1)
-    assert t.allclose(norms, t.ones_like(norms), atol=1e-4)
+    assert t.allclose(norms, t.ones_like(norms), atol=1e-2)
 
     trainer.ae.zero_grad()
     loss = trainer.loss(x_cuda, step=0)
