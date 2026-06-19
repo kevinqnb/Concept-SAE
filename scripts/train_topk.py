@@ -10,6 +10,7 @@ from dictionary_learning.utils import hf_dataset_to_generator, cfg_filename
 from dictionary_learning.trainers.top_k import AutoEncoderTopK, TrainerTopK
 from dictionary_learning.evaluation import evaluate
 import wandb
+from dotenv import load_dotenv
 import argparse
 from config import cfg
 
@@ -18,6 +19,7 @@ parser.add_argument("--gpu", required=True)
 parser.add_argument('--dict_ratio', type=int, default=32)
 parser.add_argument("--ks", nargs="+", type=int, required=True)
 args = parser.parse_args()
+load_dotenv()
 
 device = f'cuda:{args.gpu}'
 model = LanguageModel(cfg.lm, dispatch=True, device_map=device)
@@ -43,7 +45,7 @@ base_trainer_config = {
 trainer_configs = [(base_trainer_config | {'k': k}) for k in args.ks]
 
 wandb.init(
-    entity="amudide",
+    entity=os.environ["WANDB_ENTITY"],
     project="TopK",
     config={f'{tc["wandb_name"]}-{i}': tc for i, tc in enumerate(trainer_configs)},
 )

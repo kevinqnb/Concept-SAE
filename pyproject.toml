@@ -14,6 +14,7 @@ dependencies = [
     "tqdm>=4.66.1",
     "zstandard>=0.22.0",
     "wandb",
+    "python-dotenv>=1.2.2",
 ]
 
 [tool.uv]

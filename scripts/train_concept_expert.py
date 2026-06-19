@@ -10,6 +10,7 @@ from dictionary_learning.utils import hf_dataset_to_generator, cfg_filename
 from dictionary_learning.trainers.concept_expert import ConceptExpertAutoEncoder, ConceptExpertTrainer
 from dictionary_learning.evaluation import evaluate
 import wandb
+from dotenv import load_dotenv
 import argparse
 import itertools
 from config import cfg
@@ -21,6 +22,7 @@ parser.add_argument("--ks", nargs="+", type=int, required=True)
 parser.add_argument("--num_experts", nargs="+", type=int, required=True)
 parser.add_argument("--n_experts", nargs="+", type=int, required=True)
 args = parser.parse_args()
+load_dotenv()
 
 device = f'cuda:{args.gpu}'
 model = LanguageModel(cfg.lm, dispatch=True, device_map=device)
@@ -48,7 +50,7 @@ trainer_configs = [
 ]
 
 wandb.init(
-    entity="amudide",
+    entity=os.environ["WANDB_ENTITY"],
     project="Concept Expert SAE",
     config={f'{tc["wandb_name"]}-{i}': tc for i, tc in enumerate(trainer_configs)},
 )
