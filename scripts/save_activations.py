@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nnsight import LanguageModel
 from dictionary_learning.utils import hf_dataset_to_generator
-from config import lm, activation_dim, layer, hf, n_ctxs
+from config import cfg
 import torch as t
 import einops
 from tqdm import tqdm
@@ -12,16 +12,16 @@ from tqdm import tqdm
 t.set_grad_enabled(False)
 
 device = 'cuda:1'
-model = LanguageModel(lm, dispatch=True, device_map=device)
-submodule = model.transformer.h[layer]
-data = hf_dataset_to_generator(hf)
+model = LanguageModel(cfg.lm, dispatch=True, device_map=device)
+submodule = model.transformer.h[cfg.layer]
+data = hf_dataset_to_generator(cfg.hf)
 
 batch_size = 256
 num_batches = 128
 ctx_len = 128
 
 total_tokens = batch_size * num_batches * ctx_len
-total_memory = total_tokens * activation_dim * 4
+total_memory = total_tokens * cfg.activation_dim * 4
 print(f"Total contexts: {batch_size * num_batches / 1e3:.2f}K")
 print(f"Total tokens: {total_tokens / 1e6:.2f}M")
 print(f"Total memory: {total_memory / 1e9:.2f}GB")
@@ -68,5 +68,5 @@ concatenated_tokens = t.cat(all_tokens)
 print(concatenated_activations.shape, concatenated_tokens.shape)
 
 os.makedirs('data', exist_ok=True)
-t.save(concatenated_activations, f'data/activations_layer{layer}.pt')
+t.save(concatenated_activations, f'data/activations_layer{cfg.layer}.pt')
 t.save(concatenated_tokens, 'data/tokens.pt')

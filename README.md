@@ -34,10 +34,17 @@ The default dictionary size of 24576 = 384 × 64 is set to match the standard 32
 ## Setup
 
 ```bash
-uv sync
+uv sync          # install runtime deps
+uv sync --dev    # also installs pytest
 ```
 
-Requires CUDA for training. Global config (model, dataset, training steps) lives in `config.py`.
+Requires CUDA for training. Global config (model, dataset, training steps) lives in `config.py` as an `ExperimentConfig` dataclass — edit `cfg = ExperimentConfig(...)` to change defaults.
+
+Run the test suite (CPU-only; CUDA trainer test is skipped if no GPU):
+
+```bash
+pytest
+```
 
 ---
 
