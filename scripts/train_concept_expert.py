@@ -51,7 +51,7 @@ trainer_configs = [
 
 wandb.init(
     entity=os.environ["WANDB_ENTITY"],
-    project="Concept Expert SAE",
+    project="Concept SAE",
     config={f'{tc["wandb_name"]}-{i}': tc for i, tc in enumerate(trainer_configs)},
 )
 

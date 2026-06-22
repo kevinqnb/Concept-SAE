@@ -5,7 +5,7 @@ description = "Concept Expert Sparse Autoencoders for mechanistic interpretabili
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.1.2",
-    "nnsight>=0.2.11",
+    "nnsight>=0.3.0,<0.4.0",
     "datasets>=2.18.0",
     "transformers",
     "einops>=0.7.0",
