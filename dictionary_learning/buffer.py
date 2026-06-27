@@ -100,15 +100,22 @@ class ActivationBuffer:
         self.activations = self.activations[~self.read]
 
         while len(self.activations) < self.n_ctxs * self.ctx_len:
-            
+
             with t.no_grad():
-                with self.model.trace(self.text_batch(), **tracer_kwargs, invoker_args={'truncation': True, 'max_length': self.ctx_len}):
+                text = self.text_batch()
+                tokens = self.model.tokenizer(
+                    text,
+                    return_tensors='pt',
+                    max_length=self.ctx_len,
+                    padding=True,
+                    truncation=True,
+                )
+                attn_mask = tokens['attention_mask']
+                with self.model.trace(text, **tracer_kwargs, invoker_args={'truncation': True, 'max_length': self.ctx_len}):
                     if self.io == 'in':
                         hidden_states = self.submodule.input[0].save()
                     else:
                         hidden_states = self.submodule.output[0].save()
-                    input = self.model.input.save()
-            attn_mask = input.value[1]['attention_mask']
             hidden_states = hidden_states.value
             if isinstance(hidden_states, tuple):
                 hidden_states = hidden_states[0]
