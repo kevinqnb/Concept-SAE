@@ -115,7 +115,7 @@ class ActivationBuffer:
                     if self.io == 'in':
                         hidden_states = self.submodule.input[0].save()
                     else:
-                        hidden_states = self.submodule.output[0].save()
+                        hidden_states = self.submodule.output.save()
             hidden_states = hidden_states.value
             if isinstance(hidden_states, tuple):
                 hidden_states = hidden_states[0]
