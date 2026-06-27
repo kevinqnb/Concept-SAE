@@ -4,17 +4,13 @@ import io
 import json
 import argparse
 
-def hf_dataset_to_generator(dataset_name, split='train', streaming=True):
+def hf_dataset_to_generator(dataset_name, split='train', streaming=False):
+    dataset = load_dataset(dataset_name, split=split, streaming=streaming)
+
     def gen():
-        while True:
-            try:
-                dataset = load_dataset(dataset_name, split=split, streaming=streaming)
-                for x in iter(dataset):
-                    yield x['text']
-                return
-            except OSError:
-                # HF streaming connections can go stale after CUDA init; recreate and retry.
-                pass
+        for x in iter(dataset):
+            yield x['text']
+
     return gen()
 
 def zst_to_generator(data_path):
