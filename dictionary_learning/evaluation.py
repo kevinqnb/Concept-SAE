@@ -94,19 +94,18 @@ def loss_recovered(
     logits_reconstructed = logits_reconstructed.value
 
     # logits when replacing component activations with zeros
+    zeros = t.zeros_like(x_hat)
     with model.trace(text, **tracer_args, invoker_args=invoker_args):
         if io == 'in':
-            x = submodule.input[0]
             if type(submodule.input.shape) == tuple:
-                submodule.input[0][:] = t.zeros_like(x[0])
+                submodule.input = (zeros,)
             else:
-                submodule.input = t.zeros_like(x)
+                submodule.input = zeros
         elif io in ['out', 'in_and_out']:
-            x = submodule.output
             if type(submodule.output.shape) == tuple:
-                submodule.output[0][:] = t.zeros_like(x[0])
+                submodule.output = (zeros,)
             else:
-                submodule.output = t.zeros_like(x)
+                submodule.output = zeros
         else:
             raise ValueError(f"Invalid value for io: {io}")
         
