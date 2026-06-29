@@ -32,64 +32,46 @@ def loss_recovered(
     with model.trace(text, invoker_args=invoker_args):
         logits_original = model.output.save()
     logits_original = logits_original.value
-    
-    # logits when replacing component activations with reconstruction by autoencoder
+
+    # save activations — no [0] subscripting on outputs inside trace (mirrors buffer.py bb4e692)
     with model.trace(text, **tracer_args, invoker_args=invoker_args):
         if io == 'in':
-            x = submodule.input[0]
-            if type(submodule.input.shape) == tuple: x = x[0]
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x = x * scale
-        elif io == 'out':
-            x = submodule.output
-            if type(submodule.output.shape) == tuple: x = x[0]
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x = x * scale
-        elif io == 'in_and_out':
-            x = submodule.input[0]
-            if type(submodule.input.shape) == tuple: x = x[0]
-            print(f'x.shape: {x.shape}')
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x = x * scale
+            x = submodule.input[0].save()
+        elif io in ['out', 'in_and_out']:
+            x = submodule.output.save()
         else:
             raise ValueError(f"Invalid value for io: {io}")
-        x = x.save()
+
+    # handle tuple output and normalization outside the trace
+    x = x.value
+    if isinstance(x, tuple):
+        x = x[0]
+    if normalize_batch:
+        scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
+        x = x * scale
 
     # pull this out so dictionary can be written without FakeTensor (top_k needs this)
     x_hat = dictionary(x.view(-1, x.shape[-1])).view(x.shape)
 
-    # intervene with `x_hat`
+    if normalize_batch:
+        x_hat = x_hat / scale
+
+    # intervene with `x_hat` — all [0] subscripting happens outside the trace
     with model.trace(text, **tracer_args, invoker_args=invoker_args):
         if io == 'in':
-            x = submodule.input[0]
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x_hat = x_hat / scale
             if type(submodule.input.shape) == tuple:
-                submodule.input[0][:] = x_hat
+                submodule.input = (x_hat,)
             else:
                 submodule.input = x_hat
         elif io == 'out':
-            x = submodule.output
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x_hat = x_hat / scale
             if type(submodule.output.shape) == tuple:
                 submodule.output = (x_hat,)
             else:
                 submodule.output = x_hat
         elif io == 'in_and_out':
-            x = submodule.input[0]
-            if normalize_batch:
-                scale = (dictionary.activation_dim ** 0.5) / x.norm(dim=-1).mean()
-                x_hat = x_hat / scale
             submodule.output = x_hat
         else:
             raise ValueError(f"Invalid value for io: {io}")
-
         logits_reconstructed = model.output.save()
     logits_reconstructed = logits_reconstructed.value
 
@@ -108,7 +90,6 @@ def loss_recovered(
                 submodule.output = zeros
         else:
             raise ValueError(f"Invalid value for io: {io}")
-        
         input = model.input.save()
         logits_zero = model.output.save()
     logits_zero = logits_zero.value
@@ -125,9 +106,9 @@ def loss_recovered(
         tokens = text
     else:
         try:
-            tokens = input[1]['input_ids']
+            tokens = input.value[1]['input_ids']
         except:
-            tokens = input[1]['input']
+            tokens = input.value[1]['input']
 
     # compute losses
     losses = []
